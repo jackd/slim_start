@@ -11,8 +11,9 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string('name', None, 'model name')
 flags.DEFINE_string(
-    'collection', 'global_variables', 'collection name to print')
+    'collection', 'variables', 'collection name to print')
 flags.DEFINE_string('scope', None, 'variable scope')
+flags.DEFINE_boolean('endpoints', False, 'if true, prints endpoints')
 
 
 def main(_):
@@ -21,11 +22,17 @@ def main(_):
     name = FLAGS.name
     starter = get_starter(name)
     image = tf.zeros((2, 224, 224, 3), dtype=tf.float32)
-    starter.get_network_fn(is_training=True)(image)
+    with tf.contrib.slim.arg_scope(starter.get_scope()):
+        out, endpoints = starter.get_unscoped_network_fn(
+            num_classes=None)(image)
 
-    vars = tf.get_collection(FLAGS.collection, scope=FLAGS.scope)
-    for var in vars:
-        print(var.name)
+    if FLAGS.endpoints:
+        for k, v in endpoints.items():
+            print('%s: %s' % (k, str(v.shape)))
+    else:
+        vars = tf.get_collection(FLAGS.collection, scope=FLAGS.scope)
+        for var in vars:
+            print(var.name)
 
 
 if __name__ == '__main__':
