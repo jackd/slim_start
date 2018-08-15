@@ -128,18 +128,29 @@ class Starter(object):
                 except IOError:
                     return None
             assert(os.path.isdir(checkpoint_dir))
-            path = os.path.join(checkpoint_dir, '%s.ckpt' % self.name)
-            if os.path.isfile(path):
-                return path
-            else:
-                path = os.path.join(checkpoint_dir, '%s.ckpt' % self.model_id)
+
+            # for fn in os.listdir(checkpoint_dir):
+            #     if '.ckpt.data-' in fn:
+            #         return os.path.join(checkpoint_dir, fn)
+
+            for base in (self.name, self.model_id, 'model'):
+                path = os.path.join(checkpoint_dir, '%s.ckpt' % base)
+                print(path)
+                if os.path.isfile(path):
+                    return path
                 if os.path.isfile('%s.meta' % path):
                     return path
-                else:
-                    fns = os.path.listdir(checkpoint_dir)
-                    return RuntimeError(
-                        'Cannot find checkpoint file. '
-                        'Directory contents: %s' % str(fns))
+            #
+            #     path = os.path.join(checkpoint_dir, '%s.ckpt.index' % base)
+            #     if os.path.isfile(path):
+            #         return path
+            #     if os.path.isfile('%s.meta' % path):
+            #         return path
+
+            fns = os.listdir(checkpoint_dir)
+            raise RuntimeError(
+                'Cannot find checkpoint file. '
+                'Directory contents: %s' % str(fns))
 
         else:
             raise RuntimeError(
