@@ -41,11 +41,23 @@ class Starter(object):
     def model_id(self):
         return self._model_id
 
-    def get_network_fn(
-            self, num_classes=None, weight_decay=0.0, is_training=False):
-        from slim.nets.nets_factory import get_network_fn
-        return get_network_fn(
-            self.name, num_classes, weight_decay, is_training)
+    def get_scoped_network_fn(self, **scope_kwargs):
+        import tensorflow.contrib.slim as slim
+
+        def f(x, **kwargs):
+            with slim.arg_scope(self.get_scope(**scope_kwargs)):
+                return self.get_unscoped_network_fn()(x, **kwargs)
+        return f
+
+    def get_scope(self, **kwargs):
+        import slim.nets.nets_factory as factory
+        return factory.arg_scopes_map[self.name](**kwargs)
+
+    def get_unscoped_network_fn(self, **kwargs):
+        import slim.nets.nets_factory as factory
+        import functools
+        base = factory.networks_map[self.name]
+        return functools.partial(base, **kwargs) if len(kwargs) > 0 else base
 
     def default_image_size(self):
         from .sizes import get_trained_size
