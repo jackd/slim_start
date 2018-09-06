@@ -4,8 +4,9 @@ from __future__ import print_function
 
 import os
 import six.moves.urllib as urllib
+import logging
 
-
+logger = logging.getLogger(__name__)
 _checkpoints_dir = os.path.join(os.path.realpath(os.path.dirname(__file__)),
                                 '_checkpoints')
 
@@ -103,21 +104,21 @@ class Starter(object):
             return None
         path = self.download_path
         if not os.path.isfile(path):
-            print('Downloading from %s ...' % url)
+            logger.info('Downloading from %s ...' % url)
             try:
                 opener = urllib.request.URLopener()
                 opener.retrieve(url, path)
             except IOError:
-                print(
+                logger.info(
                     'Problem downloading starter file from "%s" for model '
                     '"%s".' % (url, self.name))
                 raise
-            print('Done!')
+            logger.info('Done!')
 
-        print('Extracting...')
+        logger.info('Extracting...')
         with tarfile.open(path) as tar_file:
             tar_file.extractall(self.checkpoint_dir)
-        print('Done!')
+        logger.info('Done!')
 
     def get_checkpoint(self):
         if self.has_checkpoint:
@@ -135,7 +136,6 @@ class Starter(object):
 
             for base in (self.name, self.model_id, 'model'):
                 path = os.path.join(checkpoint_dir, '%s.ckpt' % base)
-                print(path)
                 if os.path.isfile(path):
                     return path
                 if os.path.isfile('%s.meta' % path):
